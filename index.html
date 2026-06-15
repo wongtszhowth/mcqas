@@ -958,7 +958,7 @@ ce2002: {
 
             const scoreBoard = document.getElementById('score-board');
             scoreBoard.style.display = 'block';
-            scoreBoard.textContent = `Total Marks: ${totalCorrect} / ${configuredQuestionsTotal}`;
+            scoreBoard.textContent = `Marks: ${totalCorrect} / ${configuredQuestionsTotal}`;
         }
 
         function exportResults() {
@@ -1014,10 +1014,10 @@ ce2002: {
             const s = sumIndividualTimers % 60;
             const totalDurationStr = `${h}h${m.toString().padStart(2, '0')}m${s.toString().padStart(2, '0')}s`;
 
-            outputLines.push(`Total Time: ${totalDurationStr}`);
+            outputLines.push(`Time: ${totalDurationStr}`);
             
             if (wasChecked) {
-                outputLines.push(`Total Marks: ${totalCorrect}/${configuredQuestionsTotal}`);
+                outputLines.push(`Marks: ${totalCorrect}/${configuredQuestionsTotal}`);
             }
 
             const outputTextArea = document.getElementById('export-output');
