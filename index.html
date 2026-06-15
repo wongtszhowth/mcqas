@@ -411,8 +411,8 @@
         <div class="header-top-row">
             <div class="timer-display" id="global-clock">01:15:00</div>
             <div class="live-stats" id="live-stats-display">
-                Section A: A:0 | B:0 | C:0 | D:0<br>
-                Section B: A:0 | B:0 | C:0 | D:0
+                Sec A: A:0 | B:0 | C:0 | D:0<br>
+                Sec B: A:0 | B:0 | C:0 | D:0
             </div>
         </div>
         <div class="header-bottom-row">
@@ -774,8 +774,8 @@ ce2002: {
                 }
             }
             document.getElementById('live-stats-display').innerHTML = 
-                `Section A: A:${statsA.A} | B:${statsA.B} | C:${statsA.C} | D:${statsA.D}<br>` +
-                `Section B: A:${statsB.A} | B:${statsB.B} | C:${statsB.C} | D:${statsB.D}`;
+                `Sec A: A ${statsA.A} | B ${statsA.B} | C ${statsA.C} | D ${statsA.D}<br>` +
+                `Sec B: A ${statsB.A} | B ${statsB.B} | C ${statsB.C} | D ${statsB.D}`;
         }
 
         function parseTimeToSeconds(timeStr) {
