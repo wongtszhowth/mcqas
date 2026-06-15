@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MCQ Answer Sheet</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --success-color: #16a34a;
+            --danger-color: #dc2626;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #cbd5e1;
+            --guess-color: #e0f2fe;
+            --guess-accent: #2563eb;
+            --timer-bg: #f0fdf4;
+            --timer-text: #16a34a;
+            --timer-active-bg: #dcfce7;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding-bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Setup Configuration Popup Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+        .modal-content {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+        }
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #0f172a;
+            text-align: center;
+        }
+        .input-group {
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .input-group label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #475569;
+        }
+        .input-group input {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            outline: none;
+            width: 100%;
+        }
+
+        /* Sticky Header Layout with Stats and Guessing Toggle */
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--card-bg);
+            border-bottom: 2px solid var(--border-color);
+            padding: 12px;
+            z-index: 1000;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+
+        .timer-display {
+            font-size: 1.7rem;
+            font-weight: 700;
+            font-family: monospace;
+            color: #0f172a;
+        }
+
+        .live-stats {
+            font-family: monospace;
+            font-size: 0.8rem;
+            background: #f1f5f9;
+            padding: 6px 10px;
+            border-radius: 6px;
+            color: #334155;
+            border: 1px solid var(--border-color);
+            white-space: nowrap;
+            line-height: 1.4;
+            text-align: right;
+        }
+
+        .header-bottom-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 6px;
+            flex: 1.8;
+        }
+
+        .controls-row button {
+            flex: 1;
+            padding: 10px 0;
+            text-align: center;
+        }
+
+        .guess-container {
+            flex: 1.2;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #1e3a8a;
+            background: #eff6ff;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px dashed #bfdbfe;
+            user-select: none;
+        }
+        .guess-container input {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        button {
+            padding: 10px 4px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:active { opacity: 0.8; }
+
+        .btn-start { background-color: var(--success-color); color: white; }
+        .btn-pause { background-color: #eab308; color: white; }
+        .btn-reset { background-color: #64748b; color: white; }
+        .btn-action { background-color: var(--primary-color); color: white; }
+        .btn-copy { background-color: #475569; color: white; display: none; }
+
+        /* Answer Sheet Styling */
+        .main-container {
+            width: 100%;
+            max-width: 600px;
+            padding: 15px;
+        }
+
+        .answer-sheet {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 15px 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .section-banner {
+            background-color: #e2e8f0;
+            color: #334155;
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 6px 10px;
+            margin: 12px 0 6px 0;
+            border-radius: 4px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .question-row {
+            display: grid;
+            grid-template-columns: 75px 45px 1fr;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background-color 0.2s;
+        }
+
+        /* Guessing and Check state styles */
+        .guessed-row { background-color: var(--guess-color); }
+        .correct-row { background-color: #f0fdf4 !important; }
+        .incorrect-row { background-color: #fef2f2 !important; }
+
+        .margin-gap {
+            margin-bottom: 24px;
+            border-bottom: 2px dashed var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .q-timer {
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--timer-text);
+            font-weight: 600;
+            background: var(--timer-bg);
+            padding: 4px 6px;
+            border-radius: 4px;
+            text-align: center;
+            margin-right: 5px;
+            border: 1px solid #bbf7d0;
+        }
+        .q-timer.active {
+            background-color: var(--timer-active-bg);
+            border-color: var(--success-color);
+            animation: pulse 1.5s infinite;
+        }
+
+        .q-num {
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            user-select: none;
+            padding: 5px;
+            text-align: center;
+            background: #e2e8f0;
+            border-radius: 4px;
+            margin-right: 8px;
+        }
+        
+        .question-row.active-focus .q-num {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .options-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .option-box {
+            flex: 1;
+            position: relative;
+            max-width: 55px;
+        }
+
+        .option-box input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            margin: 0;
+            z-index: 2;
+        }
+
+        .option-label {
+            display: block;
+            text-align: center;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            padding: 8px 0;
+            font-weight: 600;
+            font-size: 1rem;
+            background-color: var(--card-bg);
+            transition: all 0.15s;
+            z-index: 1;
+        }
+
+        /* Standard Response Selection styling */
+        .option-box input[type="checkbox"]:checked + .option-label {
+            background-color: #1e293b;
+            color: #ffffff;
+            border-color: #1e293b;
+        }
+
+        /* Guessed Question Selection Overrides */
+        .guessed-row .option-box input[type="checkbox"]:checked + .option-label {
+            background-color: var(--guess-accent) !important;
+            color: #ffffff !important;
+            border-color: #1d4ed8 !important;
+        }
+
+        .feedback-mark {
+            font-weight: bold;
+            margin-left: 6px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+        .feedback-correct { color: var(--success-color); }
+        .feedback-incorrect { color: var(--danger-color); }
+
+        /* Bottom Menu Styles */
+        .bottom-actions {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .action-split-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            width: 100%;
+        }
+
+        .action-split-row select {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            background-color: var(--card-bg);
+            height: 46px;
+            color: var(--text-color);
+        }
+
+        .action-split-row button {
+            flex: 1;
+            height: 46px;
+        }
+
+        .score-display {
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px;
+            background: #e0f2fe;
+            color: #0369a1;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .export-box {
+            width: 100%;
+            height: 220px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            resize: vertical;
+            display: none;
+            white-space: pre;
+            overflow-x: auto;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="setup-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-title">Initialise Session</div>
+            <div class="input-group">
+                <label>Set Countdown Timer (HH:MM:SS):</label>
+                <input type="text" id="setup-time" value="01:15:00" placeholder="01:15:00">
+            </div>
+            <div class="input-group">
+                <label>Number of Questions in Section A:</label>
+                <input type="number" id="setup-count-a" value="30" min="0" max="200">
+            </div>
+            <div class="input-group">
+                <label>Number of Questions in Section B:</label>
+                <input type="number" id="setup-count-b" value="15" min="0" max="200">
+            </div>
+            <button class="btn-action" style="width: 100%;" onclick="submitConfiguration()">Build Answer Sheet</button>
+        </div>
+    </div>
+
+    <div class="sticky-header">
+        <div class="header-top-row">
+            <div class="timer-display" id="global-clock">01:15:00</div>
+            <div class="live-stats" id="live-stats-display">
+                Section A: A:0 | B:0 | C:0 | D:0<br>
+                Section B: A:0 | B:0 | C:0 | D:0
+            </div>
+        </div>
+        <div class="header-bottom-row">
+            <div class="controls-row">
+                <button class="btn-start" onclick="startGlobalTimer()">Start</button>
+                <button class="btn-pause" onclick="pauseGlobalTimer()">Pause</button>
+                <button class="btn-reset" onclick="resetGlobalTimer()">Reset</button>
+            </div>
+            <div class="guess-container">
+                <input type="checkbox" id="guess-checkbox">
+                <label for="guess-checkbox">By guessing (+)</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="answer-sheet" id="sheet-container">
+            </div>
+
+        <div class="bottom-actions">
+            <div class="action-split-row">
+                <select id="preset-select">
+<option value="dse2026">2026 HKDSE Math Paper 2</option>
+<option value="dse2025">2025 HKDSE Math Paper 2</option>
+<option value="dse2024">2024 HKDSE Math Paper 2</option>
+<option value="dse2023">2023 HKDSE Math Paper 2</option>
+<option value="dse2022">2022 HKDSE Math Paper 2</option>
+<option value="dse2021">2021 HKDSE Math Paper 2</option>
+<option value="dse2020">2020 HKDSE Math Paper 2</option>
+<option value="dse2019">2019 HKDSE Math Paper 2</option>
+<option value="dse2018">2018 HKDSE Math Paper 2</option>
+<option value="dse2017">2017 HKDSE Math Paper 2</option>
+<option value="dse2016">2016 HKDSE Math Paper 2</option>
+<option value="dse2015">2015 HKDSE Math Paper 2</option>
+<option value="dse2014">2014 HKDSE Math Paper 2</option>
+<option value="dse2013">2013 HKDSE Math Paper 2</option>
+<option value="dse2012">2012 HKDSE Math Paper 2</option>
+<option value="dsepp">PP HKDSE Math Paper 2</option>
+<option value="ce2011">2011 HKCEE Math Paper 2</option>
+<option value="ce2010">2010 HKCEE Math Paper 2</option>
+<option value="ce2009">2009 HKCEE Math Paper 2</option>
+<option value="ce2008">2008 HKCEE Math Paper 2</option>
+<option value="ce2007">2007 HKCEE Math Paper 2</option>
+<option value="ce2006">2006 HKCEE Math Paper 2</option>
+<option value="ce2005">2005 HKCEE Math Paper 2</option>
+<option value="ce2004">2004 HKCEE Math Paper 2</option>
+<option value="ce2003">2003 HKCEE Math Paper 2</option>
+<option value="ce2002">2002 HKCEE Math Paper 2</option>
+                </select>
+                <button class="btn-action" style="background-color: #1c4012;" onclick="checkAnswers()">Check Answers</button>
+            </div>
+            
+            <button class="btn-action" style="background-color: #275e19;" onclick="exportResults()">Export Result</button>
+            <button class="btn-copy" id="copy-btn" onclick="copyToClipboard()">Copy to Clipboard</button>
+            
+            <div class="score-display" id="score-board"></div>
+            <textarea class="export-box" id="export-output" readonly placeholder="Output string will generate here..."></textarea>
+        </div>
+    </div>
+
+    <script>
+        const PRESET_PAPERS = {
+dse2026: {
+    1: "D", 2: "A", 3: "D", 4: "A", 5: "A", 6: "C", 7: "A", 8: "D", 9: "D", 10: "A",
+    11: "B", 12: "B", 13: "C", 14: "C", 15: "A", 16: "B", 17: "B", 18: "C", 19: "C", 20: "B",
+    21: "C", 22: "C", 23: "D", 24: "D", 25: "B", 26: "D", 27: "A", 28: "C", 29: "D", 30: "B",
+    31: "A", 32: "D", 33: "C", 34: "C", 35: "B", 36: "D", 37: "A", 38: "B", 39: "A", 40: "D",
+    41: "C", 42: "B", 43: "C", 44: "B", 45: "A"
+},
+dse2025: {
+    1: "C", 2: "B", 3: "D", 4: "A", 5: "A", 6: "D", 7: "D", 8: "C", 9: "D", 10: "C",
+    11: "A", 12: "C", 13: "A", 14: "A", 15: "D", 16: "B", 17: "B", 18: "C", 19: "D", 20: "D",
+    21: "B", 22: "D", 23: "C", 24: "C", 25: "B", 26: "B", 27: "A", 28: "C", 29: "A", 30: "B",
+    31: "D", 32: "C", 33: "C", 34: "D", 35: "A", 36: "B", 37: "A", 38: "A", 39: "B", 40: "B",
+    41: "C", 42: "B", 43: "C", 44: "A", 45: "D"
+},
+dse2024: {
+    1: "C", 2: "D", 3: "A", 4: "A", 5: "B", 6: "A", 7: "B", 8: "D", 9: "C", 10: "B",
+    11: "C", 12: "A", 13: "C", 14: "A", 15: "D", 16: "D", 17: "C", 18: "C", 19: "D", 20: "D",
+    21: "B", 22: "B", 23: "A", 24: "A", 25: "C", 26: "B", 27: "D", 28: "C", 29: "B", 30: "D",
+    31: "B", 32: "A", 33: "B", 34: "D", 35: "A", 36: "C", 37: "C", 38: "B", 39: "A", 40: "C",
+    41: "A", 42: "C", 43: "D", 44: "D", 45: "B"
+},
+dse2023: {
+    1: "C", 2: "C", 3: "A", 4: "B", 5: "A", 6: "D", 7: "C", 8: "D", 9: "A", 10: "D",
+    11: "B", 12: "D", 13: "B", 14: "B", 15: "A", 16: "D", 17: "B", 18: "A", 19: "C", 20: "A",
+    21: "C", 22: "B", 23: "D", 24: "C", 25: "A", 26: "B", 27: "C", 28: "D", 29: "C", 30: "A",
+    31: "B", 32: "D", 33: "A", 34: "B", 35: "D", 36: "B", 37: "D", 38: "C", 39: "A", 40: "A",
+    41: "C", 42: "B", 43: "C", 44: "D", 45: "A"
+},
+dse2022: {
+    1: "D", 2: "B", 3: "A", 4: "D", 5: "A", 6: "B", 7: "A", 8: "B", 9: "D", 10: "A",
+    11: "C", 12: "C", 13: "B", 14: "C", 15: "A", 16: "D", 17: "B", 18: "C", 19: "D", 20: "B",
+    21: "B", 22: "C", 23: "C", 24: "A", 25: "D", 26: "A", 27: "C", 28: "D", 29: "A", 30: "B",
+    31: "C", 32: "C", 33: "D", 34: "A", 35: "B", 36: "B", 37: "D", 38: "D", 39: "C", 40: "A",
+    41: "A", 42: "B", 43: "B", 44: "C", 45: "D"
+},
+dse2021: {
+    1: "B", 2: "C", 3: "D", 4: "B", 5: "D", 6: "D", 7: "A", 8: "B", 9: "A", 10: "C",
+    11: "C", 12: "B", 13: "C", 14: "A", 15: "C", 16: "A", 17: "B", 18: "B", 19: "D", 20: "C",
+    21: "D", 22: "A", 23: "B", 24: "D", 25: "C", 26: "A", 27: "C", 28: "D", 29: "B", 30: "A",
+    31: "A", 32: "D", 33: "C", 34: "C", 35: "A", 36: "A", 37: "B", 38: "B", 39: "D", 40: "A",
+    41: "C", 42: "D", 43: "D", 44: "C", 45: "B"
+},
+dse2020: {
+    1: "C", 2: "C", 3: "A", 4: "A", 5: "B", 6: "D", 7: "C", 8: "A", 9: "A", 10: "B",
+    11: "A", 12: "D", 13: "D", 14: "B", 15: "D", 16: "B", 17: "C", 18: "B", 19: "B", 20: "D",
+    21: "C", 22: "C", 23: "B", 24: "D", 25: "A", 26: "D", 27: "C", 28: "B", 29: "A", 30: "A",
+    31: "B", 32: "B", 33: "D", 34: "C", 35: "D", 36: "C", 37: "C", 38: "A", 39: "A", 40: "D",
+    41: "D", 42: "A", 43: "B", 44: "A", 45: "C"
+},
+dse2019: {
+    1: "C", 2: "D", 3: "B", 4: "C", 5: "A", 6: "D", 7: "B", 8: "C", 9: "D", 10: "A",
+    11: "C", 12: "B", 13: "A", 14: "C", 15: "D", 16: "D", 17: "A", 18: "D", 19: "A", 20: "C",
+    21: "B", 22: "B", 23: "A", 24: "A", 25: "D", 26: "D", 27: "B", 28: "C", 29: "B", 30: "C",
+    31: "B", 32: "D", 33: "A", 34: "D", 35: "C", 36: "C", 37: "A", 38: "A", 39: "B", 40: "C",
+    41: "B", 42: "C", 43: "D", 44: "B", 45: "A"
+},
+dse2018: {
+    1: "B", 2: "D", 3: "C", 4: "A", 5: "A", 6: "D", 7: "D", 8: "C", 9: "D", 10: "B",
+    11: "D", 12: "A", 13: "C", 14: "B", 15: "D", 16: "A", 17: "B", 18: "B", 19: "D", 20: "B",
+    21: "C", 22: "B", 23: "B", 24: "A", 25: "D", 26: "C", 27: "C", 28: "A", 29: "C", 30: "A",
+    31: "C", 32: "C", 33: "D", 34: "C", 35: "B", 36: "A", 37: "D", 38: "B", 39: "B", 40: "A",
+    41: "D", 42: "A", 43: "C", 44: "B", 45: "A"
+},
+dse2017: {
+    1: "A", 2: "D", 3: "A", 4: "D", 5: "D", 6: "A", 7: "B", 8: "A", 9: "C", 10: "C",
+    11: "B", 12: "C", 13: "B", 14: "B", 15: "C", 16: "D", 17: "D", 18: "A", 19: "D", 20: "D",
+    21: "C", 22: "D", 23: "A", 24: "A", 25: "C", 26: "A", 27: "B", 28: "C", 29: "B", 30: "B",
+    31: "D", 32: "D", 33: "C", 34: "D", 35: "B", 36: "C", 37: "C", 38: "A", 39: "A", 40: "B",
+    41: "D", 42: "B", 43: "C", 44: "B", 45: "A"
+},
+dse2016: {
+    1: "A", 2: "A", 3: "D", 4: "C", 5: "A", 6: "B", 7: "A", 8: "C", 9: "D", 10: "C",
+    11: "D", 12: "D", 13: "A", 14: "C", 15: "B", 16: "D", 17: "A", 18: "C", 19: "A", 20: "C",
+    21: "B", 22: "D", 23: "A", 24: "B", 25: "D", 26: "B", 27: "C", 28: "C", 29: "B", 30: "B",
+    31: "C", 32: "D", 33: "A", 34: "B", 35: "D", 36: "B", 37: "A", 38: "B", 39: "A", 40: "D",
+    41: "C", 42: "A", 43: "D", 44: "B", 45: "C"
+},
+dse2015: {
+    1: "D", 2: "D", 3: "A", 4: "D", 5: "B", 6: "A", 7: "A", 8: "D", 9: "B", 10: "D",
+    11: "C", 12: "D", 13: "B", 14: "C", 15: "C", 16: "B", 17: "D", 18: "A", 19: "C", 20: "C",
+    21: "B", 22: "A", 23: "C", 24: "A", 25: "B", 26: "C", 27: "A", 28: "B", 29: "A", 30: "B",
+    31: "C", 32: "A", 33: "A", 34: "B", 35: "C", 36: "D", 37: "D", 38: "B", 39: "D", 40: "C",
+    41: "B", 42: "A", 43: "C", 44: "D", 45: "B"
+},
+dse2014: {
+    1: "B", 2: "A", 3: "B", 4: "B", 5: "C", 6: "D", 7: "C", 8: "A", 9: "A", 10: "C",
+    11: "A", 12: "D", 13: "C", 14: "D", 15: "C", 16: "C", 17: "D", 18: "A", 19: "A", 20: "B",
+    21: "A", 22: "C", 23: "B", 24: "D", 25: "D", 26: "A", 27: "B", 28: "D", 29: "C", 30: "B",
+    31: "A", 32: "C", 33: "B", 34: "C", 35: "D", 36: "A", 37: "B", 38: "A", 39: "D", 40: "D",
+    41: "C", 42: "C", 43: "B", 44: "D", 45: "B"
+},
+dse2013: {
+    1: "B", 2: "D", 3: "D", 4: "C", 5: "A", 6: "C", 7: "B", 8: "A", 9: "D", 10: "A",
+    11: "D", 12: "C", 13: "C", 14: "D", 15: "B", 16: "B", 17: "B", 18: "C", 19: "C", 20: "D",
+    21: "C", 22: "A", 23: "B", 24: "A", 25: "D", 26: "A", 27: "B", 28: "A", 29: "D", 30: "B",
+    31: "B", 32: "B", 33: "A", 34: "D", 35: "D", 36: "A", 37: "C", 38: "C", 39: "A", 40: "B",
+    41: "D", 42: "B", 43: "A", 44: "C", 45: "C"
+},
+dse2012: {
+    1: "C", 2: "D", 3: "C", 4: "B", 5: "B", 6: "D", 7: "C", 8: "D", 9: "A", 10: "D",
+    11: "C", 12: "B", 13: "D", 14: "B", 15: "A", 16: "B", 17: "B", 18: "A", 19: "C", 20: "C",
+    21: "D", 22: "A", 23: "D", 24: "A", 25: "C", 26: "A", 27: "A", 28: "B", 29: "B", 30: "D",
+    31: "B", 32: "C", 33: "A", 34: "C", 35: "A", 36: "D", 37: "A", 38: "C", 39: "D", 40: "D",
+    41: "C", 42: "B", 43: "B", 44: "D", 45: "A"
+},
+dsepp: {
+    1: "A", 2: "C", 3: "A", 4: "D", 5: "D", 6: "C", 7: "B", 8: "D", 9: "A", 10: "B",
+    11: "D", 12: "A", 13: "A", 14: "B", 15: "C", 16: "D", 17: "C", 18: "A", 19: "D", 20: "C",
+    21: "C", 22: "B", 23: "C", 24: "D", 25: "B", 26: "D", 27: "B", 28: "A", 29: "B", 30: "C",
+    31: "D", 32: "B", 33: "C", 34: "D", 35: "A", 36: "B", 37: "A", 38: "C", 39: "A", 40: "C",
+    41: "B", 42: "A", 43: "B", 44: "D", 45: "C"
+},
+ce2011: {
+    1: "A", 2: "A", 3: "D", 4: "B", 5: "A", 6: "C", 7: "A", 8: "A", 9: "B", 10: "C",
+    11: "B", 12: "B", 13: "C", 14: "B", 15: "A", 16: "C", 17: "C", 18: "B", 19: "D", 20: "D",
+    21: "D", 22: "C", 23: "B", 24: "C", 25: "A", 26: "A", 27: "C", 28: "C", 29: "B", 30: "D",
+    31: "D", 32: "D", 33: "A", 34: "B", 35: "D", 36: "D", 37: "D", 38: "B", 39: "C", 40: "D",
+    41: "A", 42: "A", 43: "B", 44: "C", 45: "C", 46: "D", 47: "A", 48: "D", 49: "C", 50: "B",
+    51: "B", 52: "C", 53: "A", 54: "B"
+},
+ce2010: {
+    1: "C", 2: "B", 3: "D", 4: "B", 5: "D", 6: "C", 7: "D", 8: "A", 9: "C", 10: "D",
+    11: "B", 12: "D", 13: "A", 14: "D", 15: "B", 16: "A", 17: "B", 18: "C", 19: "C", 20: "A",
+    21: "B", 22: "D", 23: "A", 24: "B", 25: "A", 26: "C", 27: "C", 28: "D", 29: "B", 30: "C",
+    31: "D", 32: "B", 33: "C", 34: "A", 35: "A", 36: "A", 37: "C", 38: "A", 39: "C", 40: "D",
+    41: "A", 42: "C", 43: "A", 44: "C", 45: "B", 46: "B", 47: "D", 48: "D", 49: "B", 50: "C",
+    51: "A", 52: "D", 53: "A", 54: "B"
+},
+ce2009: {
+    1: "B", 2: "D", 3: "D", 4: "A", 5: "A", 6: "A", 7: "B", 8: "D", 9: "B", 10: "C",
+    11: "B", 12: "C", 13: "C", 14: "D", 15: "D", 16: "A", 17: "B", 18: "B", 19: "A", 20: "C",
+    21: "D", 22: "B", 23: "B", 24: "C", 25: "D", 26: "A", 27: "A", 28: "C", 29: "A", 30: "D",
+    31: "B", 32: "A", 33: "D", 34: "C", 35: "C", 36: "C", 37: "D", 38: "C", 39: "D", 40: "D",
+    41: "A", 42: "B", 43: "A", 44: "A", 45: "B", 46: "C", 47: "B", 48: "B", 49: "C", 50: "C",
+    51: "B", 52: "D", 53: "C", 54: "A"
+},
+ce2008: {
+    1: "B", 2: "A", 3: "A", 4: "B", 5: "C", 6: "C", 7: "C", 8: "D", 9: "A", 10: "A",
+    11: "C", 12: "A", 13: "C", 14: "D", 15: "C", 16: "B", 17: "C", 18: "C", 19: "C", 20: "C",
+    21: "D", 22: "C", 23: "A", 24: "A", 25: "A", 26: "D", 27: "B", 28: "D", 29: "B", 30: "C",
+    31: "D", 32: "D", 33: "B", 34: "D", 35: "A", 36: "A", 37: "D", 38: "C", 39: "A", 40: "A",
+    41: "B", 42: "B", 43: "B", 44: "B", 45: "B", 46: "B", 47: "B", 48: "D", 49: "D", 50: "A",
+    51: "B", 52: "D", 53: "D", 54: "A"
+},
+ce2007: {
+    1: "A", 2: "D", 3: "A", 4: "A", 5: "D", 6: "B", 7: "B", 8: "D", 9: "A", 10: "B",
+    11: "D", 12: "D", 13: "A", 14: "B", 15: "C", 16: "A", 17: "A", 18: "B", 19: "A", 20: "D",
+    21: "D", 22: "D", 23: "B", 24: "D", 25: "C", 26: "B", 27: "D", 28: "B", 29: "C", 30: "C",
+    31: "D", 32: "A", 33: "A", 34: "C", 35: "B", 36: "C", 37: "C", 38: "D", 39: "B", 40: "A",
+    41: "A", 42: "C", 43: "B", 44: "C", 45: "C", 46: "D", 47: "B", 48: "A", 49: "A", 50: "C",
+    51: "C", 52: "C", 53: "B", 54: "D"
+},
+ce2006: {
+    1: "B", 2: "C", 3: "A", 4: "A", 5: "A", 6: "B", 7: "A", 8: "D", 9: "A", 10: "B",
+    11: "C", 12: "C", 13: "D", 14: "D", 15: "C", 16: "A", 17: "A", 18: "B", 19: "C", 20: "A",
+    21: "D", 22: "D", 23: "C", 24: "B", 25: "D", 26: "D", 27: "C", 28: "C", 29: "D", 30: "A",
+    31: "D", 32: "B", 33: "C", 34: "B", 35: "C", 36: "B", 37: "B", 38: "A", 39: "C", 40: "B",
+    41: "C", 42: "D", 43: "A", 44: "A", 45: "C", 46: "B", 47: "B", 48: "D", 49: "D", 50: "A",
+    51: "B", 52: "B", 53: "B", 54: "A"
+},
+ce2005: {
+    1: "B", 2: "D", 3: "A", 4: "D", 5: "B", 6: "D", 7: "D", 8: "C", 9: "A", 10: "D",
+    11: "B", 12: "D", 13: "C", 14: "C", 15: "D", 16: "B", 17: "D", 18: "C", 19: "B", 20: "C",
+    21: "C", 22: "C", 23: "B", 24: "C", 25: "A", 26: "C", 27: "B", 28: "C", 29: "C", 30: "D",
+    31: "A", 32: "C", 33: "D", 34: "A", 35: "D", 36: "A", 37: "D", 38: "A", 39: "D", 40: "A",
+    41: "C", 42: "A", 43: "B", 44: "A", 45: "A", 46: "B", 47: "B", 48: "B", 49: "A", 50: "B",
+    51: "B", 52: "C", 53: "B", 54: "A"
+},
+ce2004: {
+    1: "C", 2: "A", 3: "C", 4: "A", 5: "C", 6: "C", 7: "D", 8: "D", 9: "A", 10: "B",
+    11: "B", 12: "B", 13: "C", 14: "C", 15: "B", 16: "A", 17: "C", 18: "D", 19: "B", 20: "C",
+    21: "B", 22: "D", 23: "B", 24: "D", 25: "C", 26: "A", 27: "B", 28: "D", 29: "D", 30: "A",
+    31: "B", 32: "A", 33: "B", 34: "B", 35: "A", 36: "C", 37: "D", 38: "D", 39: "A", 40: "B",
+    41: "C", 42: "C", 43: "D", 44: "A", 45: "A", 46: "A", 47: "A", 48: "D", 49: "D", 50: "A",
+    51: "B", 52: "D", 53: "D", 54: "C"
+},
+ce2003: {
+    1: "C", 2: "C", 3: "A", 4: "A", 5: "C", 6: "A", 7: "D", 8: "D", 9: "C", 10: "D",
+    11: "B", 12: "D", 13: "D", 14: "A", 15: "D", 16: "D", 17: "B", 18: "B", 19: "A", 20: "C",
+    21: "C", 22: "B", 23: "B", 24: "B", 25: "C", 26: "B", 27: "A", 28: "C", 29: "A", 30: "A",
+    31: "A", 32: "B", 33: "B", 34: "C", 35: "D", 36: "C", 37: "B", 38: "C", 39: "D", 40: "A",
+    41: "C", 42: "C", 43: "D", 44: "D", 45: "B", 46: "B", 47: "A", 48: "A", 49: "D", 50: "C",
+    51: "B", 52: "A", 53: "D", 54: "B"
+},
+ce2002: {
+    1: "D", 2: "B", 3: "A", 4: "D", 5: "B", 6: "A", 7: "A", 8: "D", 9: "D", 10: "B",
+    11: "C", 12: "C", 13: "D", 14: "A", 15: "A", 16: "A", 17: "B", 18: "C", 19: "D", 20: "A",
+    21: "C", 22: "A", 23: "B", 24: "C", 25: "B", 26: "D", 27: "B", 28: "B", 29: "B", 30: "D",
+    31: "A", 32: "C", 33: "A", 34: "B", 35: "C", 36: "C", 37: "D", 38: "D", 39: "B", 40: "C",
+    41: "C", 42: "B", 43: "C", 44: "D", 45: "C", 46: "A", 47: "A", 48: "D", 49: "B", 50: "B",
+    51: "A", 52: "B", 53: "D", 54: "C"
+}
+        };
+
+        let globalInterval = null;
+        let globalSecondsRemaining = 4500; 
+        let isTimerConfigured = false;
+
+        let activeQuestionIndex = null;
+        let questionInterval = null;
+        let questionSecondsTrack = {};
+        let guessedQuestions = {}; 
+        let clickTracker = {};
+        let wasChecked = false;
+        
+        let countSectionA = 30;
+        let countSectionB = 15;
+        let configuredQuestionsTotal = 45;
+
+        function submitConfiguration() {
+            const timeVal = document.getElementById('setup-time').value;
+            countSectionA = parseInt(document.getElementById('setup-count-a').value) || 0;
+            countSectionB = parseInt(document.getElementById('setup-count-b').value) || 0;
+            configuredQuestionsTotal = countSectionA + countSectionB;
+            
+            globalSecondsRemaining = parseTimeToSeconds(timeVal) || 4500;
+            document.getElementById('global-clock').textContent = formatSecondsToHMS(globalSecondsRemaining);
+            isTimerConfigured = true;
+
+            document.getElementById('setup-modal').style.display = 'none';
+            initSheet();
+        }
+
+        function initSheet() {
+            const container = document.getElementById('sheet-container');
+            container.innerHTML = '';
+            questionSecondsTrack = {};
+            guessedQuestions = {};
+            activeQuestionIndex = null;
+            if(questionInterval) clearInterval(questionInterval);
+            wasChecked = false;
+            
+            document.getElementById('guess-checkbox').checked = false;
+            document.getElementById('score-board').style.display = 'none';
+            document.getElementById('export-output').style.display = 'none';
+            document.getElementById('copy-btn').style.display = 'none';
+            updateLiveStats();
+
+            for (let i = 1; i <= configuredQuestionsTotal; i++) {
+                questionSecondsTrack[i] = 0;
+                
+                if (i === 1 && countSectionA > 0) {
+                    const banner = document.createElement('div');
+                    banner.className = 'section-banner';
+                    banner.textContent = "Section A";
+                    container.appendChild(banner);
+                }
+                if (i === countSectionA + 1 && countSectionB > 0) {
+                    const banner = document.createElement('div');
+                    banner.className = 'section-banner';
+                    banner.textContent = "Section B";
+                    container.appendChild(banner);
+                }
+
+                const row = document.createElement('div');
+                row.className = 'question-row';
+                
+                if (i <= countSectionA) {
+                    if (i % 5 === 0 && i !== countSectionA) row.classList.add('margin-gap');
+                } else {
+                    const localOffset = i - countSectionA;
+                    if (localOffset % 5 === 0 && i !== configuredQuestionsTotal) row.classList.add('margin-gap');
+                }
+                
+                row.setAttribute('id', `row-${i}`);
+
+                row.innerHTML = `
+                    <div class="q-timer" id="timer-${i}">0m00s</div>
+                    <div class="q-num" onclick="handleQClick(${i})">${i}</div>
+                    <div class="options-container">
+                        ${['A','B','C','D'].map(opt => `
+                            <div class="option-box">
+                                <input type="checkbox" name="q-${i}" value="${opt}" onchange="handleSelection(${i})">
+                                <span class="option-label">${opt}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                container.appendChild(row);
+            }
+        }
+
+        function updateLiveStats() {
+            const statsA = { A: 0, B: 0, C: 0, D: 0 };
+            const statsB = { A: 0, B: 0, C: 0, D: 0 };
+
+            for (let i = 1; i <= configuredQuestionsTotal; i++) {
+                const checkboxes = document.getElementsByName(`q-${i}`);
+                for (const cb of checkboxes) {
+                    if (cb.checked) {
+                        if (i <= countSectionA) {
+                            statsA[cb.value]++;
+                        } else {
+                            statsB[cb.value]++;
+                        }
+                    }
+                }
+            }
+            document.getElementById('live-stats-display').innerHTML = 
+                `Section A: A:${statsA.A} | B:${statsA.B} | C:${statsA.C} | D:${statsA.D}<br>` +
+                `Section B: A:${statsB.A} | B:${statsB.B} | C:${statsB.C} | D:${statsB.D}`;
+        }
+
+        function parseTimeToSeconds(timeStr) {
+            const parts = timeStr.split(':').map(Number);
+            if (parts.length === 3) return (parts[0] * 3600) + (parts[1] * 60) + parts[2];
+            if (parts.length === 2) return (parts[0] * 60) + parts[1];
+            return 0;
+        }
+
+        function formatSecondsToHMS(totalSecs) {
+            if(totalSecs < 0) totalSecs = 0;
+            const h = Math.floor(totalSecs / 3600).toString().padStart(2, '0');
+            const m = Math.floor((totalSecs % 3600) / 60).toString().padStart(2, '0');
+            const s = (totalSecs % 60).toString().padStart(2, '0');
+            return `${h}:${m}:${s}`;
+        }
+
+        function startGlobalTimer() {
+            if (globalInterval) return;
+            globalInterval = setInterval(() => {
+                if (globalSecondsRemaining <= 0) {
+                    clearInterval(globalInterval);
+                    globalInterval = null;
+                    alert("Global countdown time is up!");
+                    return;
+                }
+                globalSecondsRemaining--;
+                document.getElementById('global-clock').textContent = formatSecondsToHMS(globalSecondsRemaining);
+            }, 1000);
+        }
+
+        function pauseGlobalTimer() {
+            clearInterval(globalInterval);
+            globalInterval = null;
+        }
+
+        function resetGlobalTimer() {
+            pauseGlobalTimer();
+            const timeVal = document.getElementById('setup-time').value;
+            globalSecondsRemaining = parseTimeToSeconds(timeVal) || 4500;
+            document.getElementById('global-clock').textContent = formatSecondsToHMS(globalSecondsRemaining);
+        }
+
+        function formatQuestionTime(secs) {
+            const m = Math.floor(secs / 60);
+            const s = secs % 60;
+            return `${m}m${s.toString().padStart(2, '0')}s`;
+        }
+
+        function handleQClick(qNum) {
+            const now = Date.now();
+            if (clickTracker[qNum] && (now - clickTracker[qNum] < 300)) {
+                clearTimeout(clickTracker[qNum + '-timeout']);
+                resetQuestionTimer(qNum);
+                return;
+            }
+            
+            clickTracker[qNum] = now;
+            clickTracker[qNum + '-timeout'] = setTimeout(() => {
+                toggleQuestionTimer(qNum);
+            }, 250);
+        }
+
+        function toggleQuestionTimer(qNum) {
+            if (activeQuestionIndex !== null) {
+                const prevRow = document.getElementById(`row-${activeQuestionIndex}`);
+                if (prevRow) prevRow.classList.remove('active-focus');
+            }
+
+            if (activeQuestionIndex === qNum && questionInterval !== null) {
+                clearInterval(questionInterval);
+                questionInterval = null;
+                document.getElementById(`timer-${qNum}`).classList.remove('active');
+            } else {
+                if(questionInterval) clearInterval(questionInterval);
+                
+                activeQuestionIndex = qNum;
+                const currentRow = document.getElementById(`row-${qNum}`);
+                currentRow.classList.add('active-focus');
+                document.getElementById(`timer-${qNum}`).classList.add('active');
+                
+                questionInterval = setInterval(() => {
+                    questionSecondsTrack[activeQuestionIndex]++;
+                    document.getElementById(`timer-${activeQuestionIndex}`).textContent = 
+                        formatQuestionTime(questionSecondsTrack[activeQuestionIndex]);
+                }, 1000);
+            }
+        }
+
+        function resetQuestionTimer(qNum) {
+            if (activeQuestionIndex === qNum) {
+                if(questionInterval) clearInterval(questionInterval);
+                questionInterval = null;
+                activeQuestionIndex = null;
+            }
+            questionSecondsTrack[qNum] = 0;
+            document.getElementById(`timer-${qNum}`).textContent = "0m00s";
+            document.getElementById(`timer-${qNum}`).classList.remove('active');
+            const targetRow = document.getElementById(`row-${qNum}`);
+            if(targetRow) targetRow.classList.remove('active-focus');
+        }
+
+        function handleSelection(qNum) {
+            if (activeQuestionIndex === qNum && questionInterval !== null) {
+                clearInterval(questionInterval);
+                questionInterval = null;
+                document.getElementById(`timer-${qNum}`).classList.remove('active');
+            }
+
+            const checkboxes = document.getElementsByName(`q-${qNum}`);
+            let totalChecked = 0;
+            for (const cb of checkboxes) {
+                if (cb.checked) totalChecked++;
+            }
+
+            const targetRow = document.getElementById(`row-${qNum}`);
+            if (totalChecked === 0) {
+                guessedQuestions[qNum] = false;
+                targetRow.classList.remove('guessed-row');
+            } else {
+                const isGuessModeActive = document.getElementById('guess-checkbox').checked;
+                guessedQuestions[qNum] = isGuessModeActive;
+                if (isGuessModeActive) {
+                    targetRow.classList.add('guessed-row');
+                } else {
+                    targetRow.classList.remove('guessed-row');
+                }
+            }
+
+            updateLiveStats();
+        }
+
+        function checkAnswers() {
+            wasChecked = true;
+            const activePreset = document.getElementById('preset-select').value;
+            const targetAnswerKey = PRESET_PAPERS[activePreset] || {};
+            let totalCorrect = 0;
+
+            for (let i = 1; i <= configuredQuestionsTotal; i++) {
+                const checkboxes = document.getElementsByName(`q-${i}`);
+                
+                let userSelections = [];
+                for (const cb of checkboxes) {
+                    if (cb.checked) userSelections.push(cb.value);
+                }
+                userSelections.sort();
+
+                const correctAnswer = targetAnswerKey[i] || "A";
+                const rowElement = document.getElementById(`row-${i}`);
+                if (!rowElement) continue;
+                
+                const existingBadge = rowElement.querySelector('.feedback-mark');
+                if (existingBadge) existingBadge.remove();
+
+                const feedbackSpan = document.createElement('span');
+
+                const isExactMatch = (userSelections.length === 1 && userSelections[0] === correctAnswer);
+
+                if (isExactMatch) {
+                    totalCorrect++;
+                    rowElement.className = 'question-row correct-row';
+                    feedbackSpan.className = 'feedback-mark feedback-correct';
+                    feedbackSpan.textContent = " ✓ (1)";
+                } else {
+                    rowElement.className = 'question-row incorrect-row';
+                    feedbackSpan.className = 'feedback-mark feedback-incorrect';
+                    feedbackSpan.textContent = ` ✗ (0) Ans: ${correctAnswer}`;
+                }
+                
+                if (i <= countSectionA) {
+                    if (i % 5 === 0 && i !== countSectionA) rowElement.classList.add('margin-gap');
+                } else {
+                    const localOffset = i - countSectionA;
+                    if (localOffset % 5 === 0 && i !== configuredQuestionsTotal) rowElement.classList.add('margin-gap');
+                }
+                
+                if (guessedQuestions[i]) rowElement.classList.add('guessed-row');
+                rowElement.appendChild(feedbackSpan);
+            }
+
+            const scoreBoard = document.getElementById('score-board');
+            scoreBoard.style.display = 'block';
+            scoreBoard.textContent = `Score: ${totalCorrect} / ${configuredQuestionsTotal}`;
+        }
+
+        function exportResults() {
+            const selectPresetElement = document.getElementById('preset-select');
+            const paperName = selectPresetElement.options[selectPresetElement.selectedIndex].text;
+            const targetAnswerKey = PRESET_PAPERS[selectPresetElement.value] || {};
+
+            let sumIndividualTimers = 0;
+            let outputLines = [];
+
+            if (wasChecked) {
+                outputLines.push(paperName);
+            }
+
+            let totalCorrect = 0;
+
+            for (let i = 1; i <= configuredQuestionsTotal; i++) {
+                const timeStr = `[${formatQuestionTime(questionSecondsTrack[i])}]`;
+                sumIndividualTimers += questionSecondsTrack[i];
+
+                const checkboxes = document.getElementsByName(`q-${i}`);
+                let userSelections = [];
+                for (const cb of checkboxes) {
+                    if (cb.checked) userSelections.push(cb.value);
+                }
+                userSelections.sort();
+
+                // Removed the surrounding brackets here for the user selection string output
+                const userSelectionStr = userSelections.length > 0 ? userSelections.join(',') : '-';
+                const questionPrefix = guessedQuestions[i] ? `+Q${i}` : `Q${i}`;
+
+                if (wasChecked) {
+                    const correctAnswer = targetAnswerKey[i] || "A";
+                    let mark = 0;
+                    let wrongAnswerNotice = "";
+
+                    if (userSelections.length === 1 && userSelections[0] === correctAnswer) {
+                        mark = 1;
+                        totalCorrect++;
+                    } else {
+                        mark = 0;
+                        wrongAnswerNotice = `\t(${correctAnswer})`;
+                    }
+
+                    outputLines.push(`${questionPrefix}\t${timeStr}\t${userSelectionStr}\t${mark}${wrongAnswerNotice}`);
+                } else {
+                    outputLines.push(`${questionPrefix}\t${timeStr}\t${userSelectionStr}`);
+                }
+            }
+
+            const h = Math.floor(sumIndividualTimers / 3600);
+            const m = Math.floor((sumIndividualTimers % 3600) / 60);
+            const s = sumIndividualTimers % 60;
+            const totalDurationStr = `${h}h${m.toString().padStart(2, '0')}m${s.toString().padStart(2, '0')}s`;
+
+            outputLines.push(`Total Time: ${totalDurationStr}`);
+            
+            if (wasChecked) {
+                outputLines.push(`Total Marks: ${totalCorrect}/${configuredQuestionsTotal}`);
+            }
+
+            const outputTextArea = document.getElementById('export-output');
+            outputTextArea.value = outputLines.join('\n');
+            outputTextArea.style.display = 'block';
+            
+            document.getElementById('copy-btn').style.display = 'block';
+            outputTextArea.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function copyToClipboard() {
+            const outputTextArea = document.getElementById('export-output');
+            if (!outputTextArea.value) return;
+
+            navigator.clipboard.writeText(outputTextArea.value)
+                .then(() => {
+                    const copyBtn = document.getElementById('copy-btn');
+                    const originalText = copyBtn.textContent;
+                    copyBtn.textContent = "Copied!";
+                    copyBtn.style.backgroundColor = "#16a34a";
+                    
+                    setTimeout(() => {
+                        copyBtn.textContent = originalText;
+                        copyBtn.style.backgroundColor = "#475569";
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('Failed to copy text: ', err);
+                });
+        }
+    </script>
+</body>
+</html>
